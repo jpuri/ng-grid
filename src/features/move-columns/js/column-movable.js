@@ -54,7 +54,7 @@
     };
   }]);
 
-  module.directive('uiGridHeaderCell', ['$log', '$compile', '$q', function ($log, $compile, $q) {
+  module.directive('uiGridHeaderCell', ['$log', '$compile', '$q', 'gridUtil', function ($log, $compile, $q, gridUtil) {
     return {
       priority: -10,
       require: '^uiGrid',
@@ -62,22 +62,36 @@
         return {
           post: function ($scope, $elm, $attrs, uiGridCtrl) {
             if (uiGridCtrl.grid.options.enableColumnMoving) {
-              var movingHeaderCell;
+              var movingElm;
               $elm.on('mousedown', function (evt) {
-                movingHeaderCell = $elm.clone();
-                $elm.append(movingHeaderCell);
-                movingHeaderCell.css({'opacity': 0.25, 'backgroundColor': 'red'});
-                angular.element('.ui-grid-header-canvas').on('mousemove', function (evt) {
-                  movingHeaderCell.css({'left': evt.offsetX});
-/*
-                  if(evt.offsetX > uiGridCtrl.grid.getViewportWidth()) {
-                    uiGridCtrl.grid.GridRenderContainer.adjustScrollHorizontal(-50)
+
+                //Cloning header cell and appending to current header cell.
+                movingElm = $elm.clone();
+                $elm.append(movingElm);
+                movingElm.css({'opacity': 0.25, position: 'fixed'});
+
+                //Clone element should move horizontally with mouse.
+                var offset;
+                angular.element(gridUtil.closestElm(movingElm, '.ui-grid-header-canvas'))
+                  .on('mousemove', function (evt) {
+                  if (!offset) {
+                    offset = evt.pageX - 1;
                   }
-*/
+                  movingElm.css({'left': (evt.pageX - offset) + 'px'});
+
+                  //Scroll the grid if end of canvas is reached.
+                  /*
+                   if(evt.offsetX > uiGridCtrl.grid.getViewportWidth()) {
+                   uiGridCtrl.grid.GridRenderContainer.adjustScrollHorizontal(-50)
+                   }
+                   */
                 });
               });
-              $elm.on('mouseup', function (evt) {
-                //movingHeaderCell.remove();
+              //Remove the cloned element on mouse up.
+              $elm.parent().parent().on('mouseup', function (evt) {
+                if (movingElm) {
+                  movingElm.remove();
+                }
               });
             }
           }
