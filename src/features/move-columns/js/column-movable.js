@@ -62,14 +62,22 @@
         return {
           post: function ($scope, $elm, $attrs, uiGridCtrl) {
             if (uiGridCtrl.grid.options.enableColumnMoving) {
-              $elm.on('click', function (evt) {
-                var movingHeaderCell = $elm.clone();
-                movingHeaderCell.on('mousemove', function (evt) {
-                  $log.log('The new cloned header cell should move horizontally along with mouse.');
+              var movingHeaderCell;
+              $elm.on('mousedown', function (evt) {
+                movingHeaderCell = $elm.clone();
+                $elm.append(movingHeaderCell);
+                movingHeaderCell.css({'opacity': 0.25, 'backgroundColor': 'red'});
+                angular.element('.ui-grid-header-canvas').on('mousemove', function (evt) {
+                  movingHeaderCell.css({'left': evt.offsetX});
+/*
+                  if(evt.offsetX > uiGridCtrl.grid.getViewportWidth()) {
+                    uiGridCtrl.grid.GridRenderContainer.adjustScrollHorizontal(-50)
+                  }
+*/
                 });
               });
-              $elm.on('mouseleave', function (evt) {
-                $log.log('Handling for mouse leaving to be implemented.');
+              $elm.on('mouseup', function (evt) {
+                //movingHeaderCell.remove();
               });
             }
           }
