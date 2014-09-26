@@ -60,7 +60,7 @@
       require: '^uiGrid',
       compile: function () {
         return {
-          post: function ($scope, $elm, $attrs, uiGridCtrl) {
+          post: function ($scope, $elm, $attrs, uiGridCtrl, uiGridRenderContainer) {
             if (uiGridCtrl.grid.options.enableColumnMoving) {
               var movingElm;
               $elm.on('mousedown', function (evt) {
@@ -68,31 +68,43 @@
                 //Cloning header cell and appending to current header cell.
                 movingElm = $elm.clone();
                 $elm.append(movingElm);
-                movingElm.css({'opacity': 0.25, position: 'fixed'});
+
+                //Left of cloned element should be aligned to original header cell.
+                var gridLeft = uiGridCtrl.grid.element[0].getBoundingClientRect().left;
+                var elmLeft = $elm[0].getBoundingClientRect().left;
+                var movingElmLeft = elmLeft - gridLeft;
+                movingElm.css({'opacity': 0.75, position: 'fixed', left: movingElmLeft + 'px'});
 
                 //Clone element should move horizontally with mouse.
-                var offset;
-                angular.element(gridUtil.closestElm(movingElm, '.ui-grid-header-canvas'))
-                  .on('mousemove', function (evt) {
-                  if (!offset) {
-                    offset = evt.pageX - 1;
-                  }
-                  movingElm.css({'left': (evt.pageX - offset) + 'px'});
+                var gridRight = gridLeft + uiGridCtrl.grid.getViewportWidth();
+                var headerCellWidth = $elm[0].getBoundingClientRect().right -
+                  $elm[0].getBoundingClientRect().left;
 
-                  //Scroll the grid if end of canvas is reached.
-                  /*
-                   if(evt.offsetX > uiGridCtrl.grid.getViewportWidth()) {
-                   uiGridCtrl.grid.GridRenderContainer.adjustScrollHorizontal(-50)
-                   }
-                   */
-                });
+                angular.element(gridUtil.closestElm($elm, '.ui-grid-header-canvas'))
+                  .on('mousemove', function (evt) {
+                    var changeValue = evt.pageX - elmLeft;
+                    if ((evt.pageX >= gridLeft) && (evt.pageX <= (gridRight - headerCellWidth))) {
+                      movingElm.css({'left': (movingElmLeft + changeValue) + 'px'});
+                    }
+                    //add condition to check is horizontal scroll exists
+                    if (evt.pageX < (gridLeft + 5)) {
+                      uiGridCtrl.fireScrollingEvent({ x: { pixels: -1 } });
+                    }
+                    if (evt.pageX > (gridRight - uiGridCtrl.grid.verticalScrollbarWidth)) {
+                      uiGridCtrl.fireScrollingEvent({ x: { pixels: 1 } });
+                    }
+                    console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
+                  });
               });
               //Remove the cloned element on mouse up.
-              $elm.parent().parent().on('mouseup', function (evt) {
-                if (movingElm) {
-                  movingElm.remove();
-                }
-              });
+              angular.element(gridUtil.closestElm($elm, 'body'))
+                .on('mouseup', function (evt) {
+                  if (movingElm) {
+                    movingElm.remove();
+                  }
+                  angular.element(gridUtil.closestElm($elm, '.ui-grid-header-canvas'))
+                    .off('mousemove');
+                });
             }
           }
         };

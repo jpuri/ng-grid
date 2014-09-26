@@ -11,10 +11,13 @@
       $scope.gridOptions = {};
 
       $scope.gridOptions.columnDefs = [
-        { name: 'id'},
-        { name: 'name'},
-        { name: 'age'},
-        { name: 'address.city'}
+        { name: 'id', width: 150},
+        { name: 'name', width: 150},
+        { name: 'age', width: 150},
+        { name: 'gender', width: 150},
+        { name: 'company', width: 150},
+        { name: 'email', width: 150},
+        { name: 'address.city', width: 150}
       ];
 
       $http.get('/data/500_complex.json')
