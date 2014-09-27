@@ -266,7 +266,14 @@ angular.module('ui.grid')
     * @name menuItems
     * @propertyOf ui.grid.class:GridOptions.columnDef
     * @description used to add menu items to a column.  Refer to the tutorial on this 
-    * functionality.
+    * functionality.  A number of settings are supported:
+    * 
+    * - title: controls the title that is displayed in the menu
+    * - icon: the icon shown alongside that title
+    * - action: the method to call when the menu is clicked
+    * - shown: a function to evaluate to determine whether or not to show the item
+    * - active: a function to evaluate to determine whether or not to enable the item
+    * - context: context to pass to the action function??
     * @example
     * <pre>  $scope.gridOptions.columnDefs = [ 
     *   { field: 'field1', menuItems: [
@@ -276,6 +283,8 @@ angular.module('ui.grid')
     *       action: function($event) {
     *         this.context.blargh(); // $scope.blargh() would work too, this is just an example
     *       },
+    *       shown: function() { return true; },
+    *       active: function() { return true; },
     *       context: $scope
     *     },
     *     {
@@ -343,6 +352,7 @@ angular.module('ui.grid')
 
     //use field if it is defined; name if it is not
     self.field = (colDef.field === undefined) ? colDef.name : colDef.field;
+    self.name = colDef.name;
 
     // Use colDef.displayName as long as it's not undefined, otherwise default to the field name
     self.displayName = (colDef.displayName === undefined) ? gridUtil.readableColumnName(colDef.name) : colDef.displayName;

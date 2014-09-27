@@ -1,6 +1,10 @@
 // var eyes = require('eyes');
 var path = require('path');
 var util = require('./lib/grunt/utils.js');
+var semver = require('semver');
+
+// Get the tag on this commit, if there is one. We'll use it in the gh-pages task
+var currentTag = semver.clean( util.getCurrentTag() );
 
 /*global module:false*/
 module.exports = function(grunt) {
@@ -15,7 +19,8 @@ module.exports = function(grunt) {
     jscs: 'grunt-jscs-checker',
     protractor: 'grunt-protractor-runner',
     'stable-version': './lib/grunt/plugins.js',
-    'current-version': './lib/grunt/plugins.js'
+    'current-version': './lib/grunt/plugins.js',
+    'update-bower-json': './lib/grunt/plugins.js'
   });
 
   // Project configuration.
@@ -381,12 +386,23 @@ module.exports = function(grunt) {
     },
 
     'gh-pages': {
-      'gh-pages': {
+      'ui-grid-site': {
         options: {
           base: '<%= dist %>',
-          tag: 'v<%= version %>',
+          tag: (currentTag) ? 'v' + currentTag : null,
           repo: 'https://github.com/angular-ui/ui-grid.info.git',
           message: 'gh-pages v<%= version %>',
+          add: true
+        },
+        src: ['**/*']
+      },
+      'bower': {
+        options: {
+          base: '<%= dist %>/release/' + currentTag,
+          tag: (currentTag) ? 'v' + currentTag : null,
+          repo: 'https://github.com/angular-ui/bower-ui-grid.git',
+          message: 'v' + currentTag,
+          branch: 'master',
           add: true
         },
         src: ['**/*']
@@ -537,7 +553,7 @@ module.exports = function(grunt) {
         keepUnstable: false
       },
       dist: {
-        src: '<%= dist %>/release/*.{js,css}',
+        src: '<%= dist %>/release/*.{js,css,svg,woff,ttf,eot}',
         dest: '<%= dist %>/release/'
       }
     }
@@ -628,5 +644,12 @@ module.exports = function(grunt) {
     }
   });
   
-  grunt.registerTask('release', ['clean', 'ngtemplates', 'build', 'cut-release', 'gh-pages']);
+  grunt.registerTask('release', 'Release a new version out info the world', function () {
+    grunt.task.run(['clean', 'ngtemplates', 'build', 'cut-release', 'gh-pages:ui-grid-site']);
+
+    // If there's a tag on this commit, release a new version to bower
+    if (currentTag) {
+      grunt.task.run('update-bower-json', 'gh-pages:bower');
+    }
+  });
 };

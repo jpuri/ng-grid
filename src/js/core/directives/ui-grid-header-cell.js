@@ -94,7 +94,7 @@
             // Long-click (for mobile)
             var cancelMousedownTimeout;
             var mousedownStartTime = 0;
-            $contentsElm.on('mousedown', function(event) {
+            $contentsElm.on('mousedown touchstart', function(event) {
               if (typeof(event.originalEvent) !== 'undefined' && event.originalEvent !== undefined) {
                 event = event.originalEvent;
               }
@@ -113,10 +113,22 @@
               });
             });
     
-            $contentsElm.on('mouseup', function () {
+            $contentsElm.on('mouseup touchend', function () {
               $timeout.cancel(cancelMousedownTimeout);
             });
+
+            $scope.$on('$destroy', function () {
+              $contentsElm.off('mousedown touchstart');
+            });
     
+            /** 
+            * @ngdoc property
+            * @name disableColumnMenu
+            * @propertyOf ui.grid.class:GridOptions.columnDef
+            * @description if column menus are enabled, disables column menus for this specific
+            * column
+            *
+            */
             $scope.toggleMenu = function($event) {
               $event.stopPropagation();
     

@@ -65,7 +65,23 @@ angular.module('ui.grid').directive('uiGridColumnMenu', ['$log', '$timeout', '$w
           return false;
         }
       };
-      
+
+
+      /**
+       * @ngdoc boolean
+       * @name disableHiding
+       * @propertyOf ui.grid.class:GridOptions.columnDef
+       * @description (optional) True by default. When enabled, this setting allows a user to hide the column
+       * using the column menu.
+       */
+      $scope.hideable = function() {
+        if (typeof($scope.col) !== 'undefined' && $scope.col && $scope.col.colDef && $scope.col.colDef.disableHiding) {
+          return false;
+        }
+        else {
+          return true;
+        }
+      };      
       var defaultMenuItems = [
         // NOTE: disabling this in favor of a little filter text box
         // Column filter input
@@ -126,6 +142,9 @@ angular.module('ui.grid').directive('uiGridColumnMenu', ['$log', '$timeout', '$w
         {
           title: i18nService.getSafeText('column.hide'),
           icon: 'ui-grid-icon-cancel',
+          shown: function() {
+            return $scope.hideable();
+          },
           action: function ($event) {
             $event.stopPropagation();
             $scope.hideColumn();
@@ -212,7 +231,7 @@ angular.module('ui.grid').directive('uiGridColumnMenu', ['$log', '$timeout', '$w
 
             // TODO(c0bra): use padding-left/padding-right based on document direction (ltr/rtl), place menu on proper side
             // Get the column menu right padding
-            var paddingRight = parseInt(angular.element($scope.menu).css('padding-right'), 10);
+            var paddingRight = parseInt(gridUtil.getStyles(angular.element($scope.menu)[0])['padding-right'], 10);
 
             // $log.debug('position', left + ' + ' + width + ' - ' + myWidth + ' + ' + paddingRight);
 
