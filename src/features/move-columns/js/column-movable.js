@@ -60,7 +60,7 @@
       require: '^uiGrid',
       compile: function () {
         return {
-          post: function ($scope, $elm, $attrs, uiGridCtrl, uiGridRenderContainer) {
+          post: function ($scope, $elm, $attrs, uiGridCtrl) {
             if (uiGridCtrl.grid.options.enableColumnMoving) {
               var movingElm;
               $elm.on('mousedown', function (evt) {
@@ -72,39 +72,46 @@
                 //Left of cloned element should be aligned to original header cell.
                 var gridLeft = uiGridCtrl.grid.element[0].getBoundingClientRect().left;
                 var elmLeft = $elm[0].getBoundingClientRect().left;
-                var movingElmLeft = elmLeft - gridLeft;
-                movingElm.css({'opacity': 0.75, position: 'fixed', left: movingElmLeft + 'px'});
+                var movingElmLeftOffset = elmLeft - gridLeft;
+                movingElm.css({'opacity': 1, position: 'fixed', left: movingElmLeftOffset + 'px'});
+                var movingCellWidth = $elm[0].getBoundingClientRect().right -
+                  $elm[0].getBoundingClientRect().left;
+                var rightLimit = gridLeft + uiGridCtrl.grid.getViewportWidth() - uiGridCtrl.grid.verticalScrollbarWidth;
+                var rightScrollLimit = uiGridCtrl.grid.gridWidth;
 
                 //Clone element should move horizontally with mouse.
-                var gridRight = gridLeft + uiGridCtrl.grid.getViewportWidth();
-                var headerCellWidth = $elm[0].getBoundingClientRect().right -
-                  $elm[0].getBoundingClientRect().left;
-
-                angular.element(gridUtil.closestElm($elm, '.ui-grid-header-canvas'))
+                var mouseMovement = evt.pageX - gridLeft;
+                var previousMouseX = evt.pageX;
+                angular.element(gridUtil.closestElm($elm, 'body'))
                   .on('mousemove', function (evt) {
-                    var changeValue = evt.pageX - elmLeft;
-                    if ((evt.pageX >= gridLeft) && (evt.pageX <= (gridRight - headerCellWidth))) {
-                      movingElm.css({'left': (movingElmLeft + changeValue) + 'px'});
+                    var currentElmLeft = movingElm[0].getBoundingClientRect().left;
+                    var currentElmRight = movingElm[0].getBoundingClientRect().right;
+                    ///var elmLeftOffset = parseInt(movingElm.css('left').substring(0, movingElm.css('left').length - 2));
+                    var changeValue = evt.pageX - previousMouseX;
+                    var newElementLeft = currentElmLeft - gridLeft + changeValue;
+                    newElementLeft = newElementLeft < rightLimit ? newElementLeft: rightLimit;
+                    if ((currentElmLeft >= gridLeft || changeValue > 0) && (currentElmRight <= rightLimit || changeValue < 0)) {
+                      movingElm.css({'left': newElementLeft + 'px'});
                     }
-                    //add condition to check is horizontal scroll exists
-                    if (evt.pageX < (gridLeft + 5)) {
-                      uiGridCtrl.fireScrollingEvent({ x: { pixels: -1 } });
+                    else {
+                      uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 5 } });
                     }
-                    if (evt.pageX > (gridRight - uiGridCtrl.grid.verticalScrollbarWidth)) {
-                      uiGridCtrl.fireScrollingEvent({ x: { pixels: 1 } });
+                    previousMouseX = evt.pageX;
+                    // a check can be added to see if horizontal scroll exists.
+                    //console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
+                  });
+                //Remove the cloned element on mouse up.
+                angular.element(gridUtil.closestElm($elm, 'body'))
+                  .on('mouseup', function (evt) {
+                    if (movingElm) {
+                      movingElm.remove();
                     }
-                    console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
+                    angular.element(gridUtil.closestElm($elm, 'body'))
+                      .off('mousemove');
+                    angular.element(gridUtil.closestElm($elm, 'body'))
+                      .off('mouseup');
                   });
               });
-              //Remove the cloned element on mouse up.
-              angular.element(gridUtil.closestElm($elm, 'body'))
-                .on('mouseup', function (evt) {
-                  if (movingElm) {
-                    movingElm.remove();
-                  }
-                  angular.element(gridUtil.closestElm($elm, '.ui-grid-header-canvas'))
-                    .off('mousemove');
-                });
             }
           }
         };
