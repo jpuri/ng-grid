@@ -76,41 +76,48 @@
                 movingElm.css({'opacity': 1, position: 'fixed', left: movingElmLeftOffset + 'px'});
                 var movingCellWidth = $elm[0].getBoundingClientRect().right -
                   $elm[0].getBoundingClientRect().left;
-                var rightLimit = gridLeft + uiGridCtrl.grid.getViewportWidth() - uiGridCtrl.grid.verticalScrollbarWidth;
+                var rightMoveLimit = gridLeft + uiGridCtrl.grid.getViewportWidth() - uiGridCtrl.grid.verticalScrollbarWidth;
                 var rightScrollLimit = uiGridCtrl.grid.gridWidth;
 
                 //Clone element should move horizontally with mouse.
-                var mouseMovement = evt.pageX - gridLeft;
                 var previousMouseX = evt.pageX;
+                var mouseMoveHandler = function (evt) {
+                  var currentElmLeft = movingElm[0].getBoundingClientRect().left;
+                  var currentElmRight = movingElm[0].getBoundingClientRect().right;
+                  ///var elmLeftOffset = parseInt(movingElm.css('left').substring(0, movingElm.css('left').length - 2));
+                  var changeValue = evt.pageX - previousMouseX;
+                  var newElementLeft = currentElmLeft - gridLeft + changeValue;
+                  newElementLeft = newElementLeft < rightMoveLimit ? newElementLeft: rightMoveLimit;
+                  if ((currentElmLeft >= gridLeft || changeValue > 0) && (currentElmRight <= rightMoveLimit || changeValue < 0)) {
+                    movingElm.css({'left': newElementLeft + 'px'});
+                  }
+                  else {
+                    uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 5 } });
+                  }
+                  previousMouseX = evt.pageX;
+                  // a check can be added to see if horizontal scroll exists.
+                  //console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
+                };
                 angular.element(gridUtil.closestElm($elm, 'body'))
-                  .on('mousemove', function (evt) {
-                    var currentElmLeft = movingElm[0].getBoundingClientRect().left;
-                    var currentElmRight = movingElm[0].getBoundingClientRect().right;
-                    ///var elmLeftOffset = parseInt(movingElm.css('left').substring(0, movingElm.css('left').length - 2));
-                    var changeValue = evt.pageX - previousMouseX;
-                    var newElementLeft = currentElmLeft - gridLeft + changeValue;
-                    newElementLeft = newElementLeft < rightLimit ? newElementLeft: rightLimit;
-                    if ((currentElmLeft >= gridLeft || changeValue > 0) && (currentElmRight <= rightLimit || changeValue < 0)) {
-                      movingElm.css({'left': newElementLeft + 'px'});
-                    }
-                    else {
-                      uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 5 } });
-                    }
-                    previousMouseX = evt.pageX;
-                    // a check can be added to see if horizontal scroll exists.
-                    //console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
-                  });
+                  .on('mousemove', mouseMoveHandler);
+
                 //Remove the cloned element on mouse up.
+                var mouseUpHandler = function (evt) {
+                  if (movingElm) {
+                    movingElm.remove();
+                  }
+                  var temp = uiGridCtrl.grid.columns[0];
+                  uiGridCtrl.grid.columns[0] = uiGridCtrl.grid.columns[1];
+                  uiGridCtrl.grid.columns[1] = temp;
+                  uiGridCtrl.grid.refresh();
+                  angular.element(gridUtil.closestElm($elm, 'body'))
+                    .off('mousemove', mouseMoveHandler);
+                  angular.element(gridUtil.closestElm($elm, 'body'))
+                    .off('mouseup', mouseUpHandler);
+                };
                 angular.element(gridUtil.closestElm($elm, 'body'))
-                  .on('mouseup', function (evt) {
-                    if (movingElm) {
-                      movingElm.remove();
-                    }
-                    angular.element(gridUtil.closestElm($elm, 'body'))
-                      .off('mousemove');
-                    angular.element(gridUtil.closestElm($elm, 'body'))
-                      .off('mouseup');
-                  });
+                  .on('mouseup', mouseUpHandler);
+
               });
             }
           }
