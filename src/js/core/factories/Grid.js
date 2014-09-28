@@ -364,12 +364,10 @@ angular.module('ui.grid')
       var col = self.getColumn(colDef.name);
 
       if (!col) {
-        $log.log('into if');
         col = new GridColumn(colDef, index + offset, self);
         self.columns.push(col);
       }
       else {
-        $log.log('into else', col.index, colDef.name);
         col.updateColumnDef(colDef, col.index);
       }
 

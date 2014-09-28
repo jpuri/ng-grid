@@ -81,10 +81,11 @@
 
                 //Clone element should move horizontally with mouse.
                 var previousMouseX = evt.pageX;
+                var totalMouseMovement = 0;
+                var originalScrollLeft = uiGridCtrl.grid.renderContainers['body'].prevScrollLeft;
                 var mouseMoveHandler = function (evt) {
                   var currentElmLeft = movingElm[0].getBoundingClientRect().left;
                   var currentElmRight = movingElm[0].getBoundingClientRect().right;
-                  ///var elmLeftOffset = parseInt(movingElm.css('left').substring(0, movingElm.css('left').length - 2));
                   var changeValue = evt.pageX - previousMouseX;
                   var newElementLeft = currentElmLeft - gridLeft + changeValue;
                   newElementLeft = newElementLeft < rightMoveLimit ? newElementLeft: rightMoveLimit;
@@ -95,8 +96,7 @@
                     uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 5 } });
                   }
                   previousMouseX = evt.pageX;
-                  // a check can be added to see if horizontal scroll exists.
-                  //console.log('&&&&', uiGridCtrl.grid.renderContainers['body'].prevScrollLeft);
+                  totalMouseMovement += changeValue;
                 };
                 angular.element(gridUtil.closestElm($elm, 'body'))
                   .on('mousemove', mouseMoveHandler);
@@ -106,9 +106,37 @@
                   if (movingElm) {
                     movingElm.remove();
                   }
-                  var temp = uiGridCtrl.grid.columns[0];
-                  uiGridCtrl.grid.columns[0] = uiGridCtrl.grid.columns[1];
-                  uiGridCtrl.grid.columns[1] = temp;
+                  //Case where column should be moved to beginning of the grid.
+                  if ((totalMouseMovement + movingElmLeftOffset  + originalScrollLeft)<= 0) {
+                    for (var i1 = $scope.col.index; i1 > 0; i1--) {
+                      uiGridCtrl.grid.columns[i1] = uiGridCtrl.grid.columns[i1-1];
+                      uiGridCtrl.grid.columns[i1].index = i1;
+                      uiGridCtrl.grid.columns[i1].colDef.index = i1;
+                    }
+                    uiGridCtrl.grid.columns[0] = $scope.col;
+                    uiGridCtrl.grid.columns[0].index = 0;
+                    uiGridCtrl.grid.columns[0].colDef.index = 0;
+                  }
+                  //Case where column should be moved to end of the grid.
+                  else if (totalMouseMovement + movingElmLeftOffset + movingCellWidth >= uiGridCtrl.grid.getViewportWidth()) {
+                    var totalColumns = uiGridCtrl.grid.columns.length;
+                    var index = $scope.col.index;
+                    for (var i2 = index; i2 < totalColumns-1; i2++) {
+                      uiGridCtrl.grid.columns[i2] = uiGridCtrl.grid.columns[i2+1];
+                      uiGridCtrl.grid.columns[i2].index = i2;
+                      uiGridCtrl.grid.columns[i2].colDef.index = i2;
+                    }
+                    uiGridCtrl.grid.columns[totalColumns-1] = $scope.col;
+                    uiGridCtrl.grid.columns[totalColumns-1].index = totalColumns-1;
+                    uiGridCtrl.grid.columns[totalColumns-1].colDef.index = totalColumns-1;
+                  }
+                  //Case where column should be moved to a position on its left
+                  else if (false) {
+                  }
+                  //Case where column should be moved to a position on its right
+                  else if (false) {
+                  }
+
                   uiGridCtrl.grid.refresh();
                   angular.element(gridUtil.closestElm($elm, 'body'))
                     .off('mousemove', mouseMoveHandler);
@@ -127,3 +155,5 @@
   }]);
 
 })();
+
+//TODO: functionality to be tested with row headers.
