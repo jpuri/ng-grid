@@ -5,10 +5,12 @@
 @example
 <example module="app">
   <file name="app.js">
-    var app = angular.module('app', ['ui.grid', 'ui.grid.moveColumns']);
+    var app = angular.module('app', ['ui.grid', 'ui.grid.moveColumns', 'ui.grid.resizeColumns']);
 
     app.controller('MainCtrl', ['$scope', '$http', '$log', function ($scope, $http, $log) {
-      $scope.gridOptions = {};
+      $scope.gridOptions = {
+        enableColumnResizing: true
+      };
 
       $scope.gridOptions.columnDefs = [
         { name: 'id', width: 150},
