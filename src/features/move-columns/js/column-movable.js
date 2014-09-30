@@ -103,6 +103,7 @@
                 angular.element(gridUtil.closestElm($elm, 'body'))
                   .on('mousemove', mouseMoveHandler);
 
+                //index in calculations below to be replaced with render index
                 var redrawColumnAtLeftPosition = function (position) {
                   for (var i1 = $scope.col.index; i1 > position; i1--) {
                     uiGridCtrl.grid.columns[i1] = uiGridCtrl.grid.columns[i1 - 1];
