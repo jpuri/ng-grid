@@ -116,7 +116,7 @@
 
                 //Clone element should move horizontally with mouse.
                 var mouseMoveHandler = function (evt) {
-                  var currentElmLeft = movingElm[0].getBoundingClientRect().left;
+                  var currentElmLeft = movingElm[0].getBoundingClientRect().left - 1;
                   var currentElmRight = movingElm[0].getBoundingClientRect().right;
                   var changeValue = evt.pageX - previousMouseX;
                   var newElementLeft = currentElmLeft - gridLeft + changeValue;
