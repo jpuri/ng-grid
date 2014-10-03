@@ -384,12 +384,15 @@
             newWidth = col.colDef.maxWidth;
           }
           
-          col.colDef.width = newWidth;
-
           // All other columns because fixed to their drawn width, if they aren't already
           resizeAroundColumn(col);
 
+          col.colDef.width = newWidth;
+
           buildColumnsAndRefresh(xDiff);
+
+          col.colDef.width = newWidth;
+          col.drawnWidth = newWidth;
 
           $document.off('mouseup', mouseup);
           $document.off('mousemove', mousemove);

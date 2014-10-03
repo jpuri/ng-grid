@@ -63,7 +63,7 @@
         });
       }
 
-  };
+    };
     return service;
   }]);
 
@@ -142,11 +142,11 @@
                   var renderIndex;
                   $attrs.$observe('renderIndex', function (n, o) {
                     renderIndex = $scope.$eval(n);
-
                     renderIndexDefer.resolve();
                   });
 
                   renderIndexDefer.promise.then(function () {
+
                     //Remove the cloned element on mouse up.
                     if (movingElm) {
                       movingElm.remove();
@@ -155,36 +155,32 @@
                     var visibleColumns = $scope.grid.renderContainers['body'].visibleColumnCache;
                     //Case where column should be moved to a position on its left
                     if (totalMouseMovement < 0) {
-                      //Case where column should be moved to beginning of the grid.
-                      if ((totalMouseMovement + originalScrollLeft) <= 0) {
-                        uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, 0);
-                      }
-                      else {
-                        var totalColumnsLeftWidth = 0;
-                        for (var il = renderIndex - 1; il >= 0; il--) {
-                          totalColumnsLeftWidth += visibleColumns[il].drawnWidth;
-                          if (totalColumnsLeftWidth > Math.abs(totalMouseMovement)) {
-                            uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, il + 1);
-                            break;
-                          }
+                      var totalColumnsLeftWidth = 0;
+                      for (var il = renderIndex - 1; il >= 0; il--) {
+                        totalColumnsLeftWidth += visibleColumns[il].drawnWidth;
+                        if (totalColumnsLeftWidth > Math.abs(totalMouseMovement)) {
+                          uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, il + 1);
+                          break;
                         }
+                      }
+                      //Case where column should be moved to beginning of the grid.
+                      if (totalColumnsLeftWidth < Math.abs(totalMouseMovement)) {
+                        uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, 0);
                       }
                     }
                     //Case where column should be moved to a position on its right
                     else {
-                      //Case where column should be moved to end of the grid.
-                      if (totalMouseMovement + movingElmLeftOffset + $scope.col.drawnWidth >= $scope.grid.getViewportWidth()) {
-                        uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, visibleColumns.length - 1);
-                      }
-                      else {
-                        var totalColumnsRightWidth = 0;
-                        for (var ir = renderIndex + 1; ir < visibleColumns.length; ir++) {
-                          totalColumnsRightWidth += visibleColumns[ir].drawnWidth;
-                          if (totalColumnsRightWidth > totalMouseMovement) {
-                            uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, ir - 1);
-                            break;
-                          }
+                      var totalColumnsRightWidth = 0;
+                      for (var ir = renderIndex + 1; ir < visibleColumns.length; ir++) {
+                        totalColumnsRightWidth += visibleColumns[ir].drawnWidth;
+                        if (totalColumnsRightWidth > totalMouseMovement) {
+                          uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, ir - 1);
+                          break;
                         }
+                      }
+                      //Case where column should be moved to end of the grid.
+                      if (totalColumnsRightWidth < totalMouseMovement) {
+                        uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, visibleColumns.length - 1);
                       }
                     }
 
