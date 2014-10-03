@@ -160,6 +160,31 @@ angular.module('ui.grid')
 
   /**
    * @ngdoc function
+   * @name sortHandleNulls
+   * @methodOf ui.grid.core.api:PublicApi
+   * @description A null handling method that can be used when building custom sort
+   * functions
+   * @example
+   * <pre>
+   *   mySortFn = function(a, b) {
+   *   var nulls = $scope.gridApi.core.sortHandleNulls(a, b);
+   *   if ( nulls !== null ){
+   *     return nulls;
+   *   } else {
+   *     // your code for sorting here
+   *   };
+   * </pre>
+   * @param {object} a sort value a
+   * @param {object} b sort value b
+   * @returns {number} null if there were no nulls/undefineds, otherwise returns
+   * a sort value that should be passed back from the sort function
+   * 
+   */
+  self.api.registerMethod( 'core', 'sortHandleNulls', rowSorter.handleNulls );
+
+
+  /**
+   * @ngdoc function
    * @name sortChanged
    * @methodOf  ui.grid.core.api:PublicApi
    * @description The sort criteria on one or more columns has
@@ -336,7 +361,7 @@ angular.module('ui.grid')
     $log.debug('buildColumns');
     var self = this;
     var builderPromises = [];
-    var offset = self.rowHeaderColumns.length;
+    var headerOffset = self.rowHeaderColumns.length;
 
     // Synchronize self.columns with self.options.columnDefs so that columns can also be removed.
     self.columns.forEach(function (column, index) {
@@ -348,13 +373,7 @@ angular.module('ui.grid')
 
     //add row header columns to the grid columns array _after_ columns without columnDefs have been removed
     self.rowHeaderColumns.forEach(function (rowHeaderColumn) {
-      offset++;
       self.columns.unshift(rowHeaderColumn);
-      
-      // renumber any columns already there, as cellNav relies on cols[index] === col.index
-      self.columns.forEach(function(column, index){
-        column.index = index;
-      });
     });
 
 
@@ -363,8 +382,8 @@ angular.module('ui.grid')
       var col = self.getColumn(colDef.name);
 
       if (!col) {
-        col = new GridColumn(colDef, index + offset, self);
-        self.columns.push(col);
+        col = new GridColumn(colDef, index, self);
+        self.columns.splice(index + headerOffset, 0, col);
       }
       else {
         col.updateColumnDef(colDef, col.index);
