@@ -263,7 +263,7 @@
             
             var colDef = column.colDef;
             if (!colDef.width || (angular.isString(colDef.width) && (colDef.width.indexOf('*') !== -1 || colDef.width.indexOf('%') !== -1))) {
-              colDef.width = column.drawnWidth;
+              column.width = column.drawnWidth;
             }
           });
         }
@@ -384,6 +384,8 @@
             newWidth = col.colDef.maxWidth;
           }
           
+          col.width = newWidth;
+
           // All other columns because fixed to their drawn width, if they aren't already
           resizeAroundColumn(col);
 
@@ -491,7 +493,7 @@
             maxWidth = col.colDef.maxWidth;
           }
 
-          col.colDef.width = parseInt(maxWidth, 10);
+          col.width = parseInt(maxWidth, 10);
           
           // All other columns because fixed to their drawn width, if they aren't already
           resizeAroundColumn(col);

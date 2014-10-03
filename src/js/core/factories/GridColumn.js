@@ -310,8 +310,8 @@ angular.module('ui.grid')
 
     var parseErrorMsg = "Cannot parse column width '" + colDef.width + "' for column named '" + colDef.name + "'";
 
-    if (!self.width) {
-      // If width is not defined, set it to a single star
+    // If width is not defined, set it to a single star
+    if (gridUtil.isNullOrUndefined(self.width) || !angular.isNumber(self.width)) {
       if (gridUtil.isNullOrUndefined(colDef.width)) {
         self.width = '*';
       }
