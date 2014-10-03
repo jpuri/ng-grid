@@ -19,13 +19,12 @@
             colMovable: {
               columnPositionChanged: function (scope, col) {
               }
-            },
-            methods: {
-              colMovable: {
-                //The parameters should be column or positions ?
-                moveColumn: function (originalPosition, finalPosition) {
-                  self.redrawColumnAtPosition(grid, originalPosition, finalPosition);
-                }
+            }
+          },
+          methods: {
+            colMovable: {
+              moveColumn: function (originalPosition, finalPosition) {
+                self.redrawColumnAtPosition(grid, originalPosition, finalPosition);
               }
             }
           }
@@ -104,9 +103,10 @@
                 var gridLeft = $scope.grid.element[0].getBoundingClientRect().left;
                 var elmLeft = $elm[0].getBoundingClientRect().left;
                 var movingElmLeftOffset = elmLeft - gridLeft;
-                movingElm.css({'opacity': 1, position: 'fixed', left: movingElmLeftOffset + 'px'});
+                movingElm.addClass('movingColumn');
+                movingElm.css({left: movingElmLeftOffset + 'px'});
 
-                //Setting some variables required fro calculations.
+                //Setting some variables required for calculations.
                 var previousMouseX = evt.pageX;
                 var originalMouseX = evt.pageX;
                 var totalMouseMovement = 0;
@@ -126,7 +126,7 @@
                   }
                   else {
                     totalScroll += changeValue;
-                    changeValue *= 5;
+                    changeValue *= 30;
                     uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue} });
                   }
                   totalMouseMovement += changeValue;
@@ -172,6 +172,7 @@
                     else {
                       var totalColumnsRightWidth = 0;
                       for (var ir = renderIndex + 1; ir < visibleColumns.length; ir++) {
+                        console.log('visibleColumns[ir].drawnWidth', visibleColumns[ir].drawnWidth);
                         totalColumnsRightWidth += visibleColumns[ir].drawnWidth;
                         if (totalColumnsRightWidth > totalMouseMovement) {
                           uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, ir - 1);
