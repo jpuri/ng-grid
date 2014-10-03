@@ -111,7 +111,6 @@
                 var originalMouseX = evt.pageX;
                 var totalMouseMovement = 0;
                 var originalScrollLeft = $scope.grid.renderContainers['body'].prevScrollLeft;
-                var totalScroll = $scope.grid.renderContainers['body'].prevScrollLeft;
                 var rightMoveLimit = gridLeft + $scope.grid.getViewportWidth() - $scope.grid.verticalScrollbarWidth;
 
                 //Clone element should move horizontally with mouse.
@@ -125,9 +124,8 @@
                     movingElm.css({'left': newElementLeft + 'px'});
                   }
                   else {
-                    totalScroll += changeValue;
-                    changeValue *= 30;
-                    uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue} });
+                    changeValue *= 25;
+                    uiGridCtrl.fireScrollingEvent({ x: { incrementalPixels: changeValue} });
                   }
                   totalMouseMovement += changeValue;
                   previousMouseX = evt.pageX;
@@ -172,8 +170,9 @@
                     else {
                       var totalColumnsRightWidth = 0;
                       for (var ir = renderIndex + 1; ir < visibleColumns.length; ir++) {
-                        console.log('visibleColumns[ir].drawnWidth', visibleColumns[ir].drawnWidth);
                         totalColumnsRightWidth += visibleColumns[ir].drawnWidth;
+                        console.log('totalColumnsRightWidth', totalColumnsRightWidth);
+                        console.log('totalMouseMovement', totalMouseMovement);
                         if (totalColumnsRightWidth > totalMouseMovement) {
                           uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, ir - 1);
                           break;

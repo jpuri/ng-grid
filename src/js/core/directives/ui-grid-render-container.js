@@ -116,18 +116,22 @@
                 var oldScrollLeft = GridUtil.normalizeScrollLeft(containerCtrl.viewport);
 
                 var scrollXPercentage;
+                var newScrollLeft;
                 if (typeof(args.x.percentage) !== 'undefined' && args.x.percentage !== undefined) {
                   scrollXPercentage = args.x.percentage;
+                  newScrollLeft = Math.max(0, scrollXPercentage * scrollWidth);
                 }
                 else if (typeof(args.x.pixels) !== 'undefined' && args.x.pixels !== undefined) {
                   scrollXPercentage = args.x.percentage = (oldScrollLeft + args.x.pixels) / scrollWidth;
+                  newScrollLeft = Math.max(0, scrollXPercentage * scrollWidth);
+                }
+                else if (typeof(args.x.incrementalPixels) !== 'undefined' && args.x.incrementalPixels !== undefined) {
+                  newScrollLeft = oldScrollLeft + args.x.incrementalPixels;
                 }
                 else {
                   throw new Error("No percentage or pixel value provided for scroll event X axis");
                 }
 
-                var newScrollLeft = Math.max(0, scrollXPercentage * scrollWidth);
-                
                 // uiGridCtrl.adjustScrollHorizontal(newScrollLeft, scrollXPercentage);
 
                 // containerCtrl.viewport[0].scrollLeft = newScrollLeft;
