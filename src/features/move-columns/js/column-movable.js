@@ -126,7 +126,8 @@
                   }
                   else {
                     totalScroll += changeValue;
-                    uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 5 } });
+                    changeValue *= 5;
+                    uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue} });
                   }
                   totalMouseMovement += changeValue;
                   previousMouseX = evt.pageX;
@@ -155,7 +156,7 @@
                     //Case where column should be moved to a position on its left
                     if (totalMouseMovement < 0) {
                       //Case where column should be moved to beginning of the grid.
-                      if ((totalMouseMovement + movingElmLeftOffset + originalScrollLeft) <= 0) {
+                      if ((totalMouseMovement + originalScrollLeft) <= 0) {
                         uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, 0);
                       }
                       else {
@@ -170,13 +171,13 @@
                       }
                     }
                     //Case where column should be moved to a position on its right
-                    else if (totalMouseMovement > movingElmLeftOffset) {
+                    else {
                       //Case where column should be moved to end of the grid.
-                      if (totalMouseMovement + movingElmLeftOffset + $elm[0].drawnWidth >= $scope.grid.getViewportWidth()) {
+                      if (totalMouseMovement + movingElmLeftOffset + $scope.col.drawnWidth >= $scope.grid.getViewportWidth()) {
                         uiGridMoveColumnService.redrawColumnAtPosition($scope.grid, renderIndex, visibleColumns.length - 1);
                       }
                       else {
-                        var totalColumnsRightWidth = originalScrollLeft;
+                        var totalColumnsRightWidth = 0;
                         for (var ir = renderIndex + 1; ir < visibleColumns.length; ir++) {
                           totalColumnsRightWidth += visibleColumns[ir].drawnWidth;
                           if (totalColumnsRightWidth > totalMouseMovement) {
