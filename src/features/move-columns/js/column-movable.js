@@ -1,8 +1,21 @@
 (function () {
   'use strict';
 
+  /**
+   * @ngdoc overview
+   * @name ui.grid.moveColumns
+   * @description
+   * # ui.grid.moveColumns
+   * This module provides column moving capability to ui.grid. It enables to change the position of columns.
+   * <div doc-module-components="ui.grid.moveColumns"></div>
+   */
   var module = angular.module('ui.grid.moveColumns', ['ui.grid']);
 
+  /**
+   *  @ngdoc service
+   *  @name ui.grid.moveColumns.service:uiGridMoveColumnService
+   *  @description Service for column moving feature.
+   */
   module.service('uiGridMoveColumnService', ['$q', '$timeout', function ($q, $timeout) {
 
     var service = {
@@ -14,14 +27,42 @@
       },
       registerPublicApi: function (grid) {
         var self = this;
+        /**
+         *  @ngdoc object
+         *  @name ui.grid.moveColumns.api:PublicApi
+         *  @description Public Api for column moving feature.
+         */
         var publicApi = {
           events: {
+            /**
+             * @ngdoc event
+             * @name columnPositionChanged
+             * @eventOf  ui.grid.moveColumns.api:PublicApi
+             * @description raised when column is moved
+             * <pre>
+             *      gridApi.colMovable.on.columnPositionChanged(scope,function(colDef, oldPosition, newPosition){})
+             * </pre>
+             * @param {object} colDef the column that was moved
+             * @param {integer} originalPosition of the column
+             * @param {integer} finalPosition of the column
+             */
             colMovable: {
-              columnPositionChanged: function (scope, col) {
+              columnPositionChanged: function (col) {
               }
             }
           },
           methods: {
+            /**
+             * @ngdoc method
+             * @name moveColumn
+             * @methodOf  ui.grid.moveColumns.api:PublicApi
+             * @description Method can be used to change column position.
+             * <pre>
+             *      gridApi.colMovable.on.moveColumn(oldPosition, newPosition)
+             * </pre>
+             * @param {integer} originalPosition of the column
+             * @param {integer} finalPosition of the column
+             */
             colMovable: {
               moveColumn: function (originalPosition, finalPosition) {
                 self.redrawColumnAtPosition(grid, originalPosition, finalPosition);
@@ -33,10 +74,37 @@
         grid.api.registerMethodsFromObject(publicApi.methods);
       },
       defaultGridOptions: function (gridOptions) {
+        /**
+         *  @ngdoc object
+         *  @name ui.grid.moveColumns.api:GridOptions
+         *
+         *  @description Options for configuring the move column feature, these are available to be
+         *  set using the ui-grid {@link ui.grid.class:GridOptions gridOptions}
+         */
+        /**
+         *  @ngdoc object
+         *  @name enableColumnMoving
+         *  @propertyOf  ui.grid.moveColumns.api:GridOptions
+         *  @description If defined, sets the default value for the colMovable flag on each individual colDefs
+         *  if their individual enableColumnMoving configuration is not defined. Defaults to true.
+         */
         gridOptions.enableColumnMoving = gridOptions.enableColumnMoving !== false;
       },
       movableColumnBuilder: function (colDef, col, gridOptions) {
         var promises = [];
+        /**
+         *  @ngdoc object
+         *  @name ui.grid.moveColumns.api:ColumnDef
+         *
+         *  @description Column Definition for move column feature, these are available to be
+         *  set using the ui-grid {@link ui.grid.class:GridOptions.columnDef gridOptions.columnDefs}
+         */
+        /**
+         *  @ngdoc object
+         *  @name enableColumnMoving
+         *  @propertyOf  ui.grid.moveColumns.api:ColumnDef
+         *  @description Enable column moving for the column.
+         */
         colDef.enableColumnMoving = colDef.enableColumnMoving === undefined ? gridOptions.enableColumnMoving
           : colDef.enableColumnMoving;
         return $q.all(promises);
@@ -59,7 +127,7 @@
           $timeout(function () {
             grid.redrawInPlace();
             grid.refreshCanvas(true);
-            grid.api.colMovable.raise.columnPositionChanged(originalColumn);
+            grid.api.colMovable.raise.columnPositionChanged(originalColumn.colDef, originalPosition, newPosition);
           });
         }
       }
@@ -67,6 +135,42 @@
     return service;
   }]);
 
+  /**
+   *  @ngdoc directive
+   *  @name ui.grid.moveColumns.directive:uiGridMoveColumns
+   *  @element div
+   *  @restrict A
+   *  @description Adds column moving features to the ui-grid directive.
+   *  @example
+  <example module="app">
+    <file name="app.js">
+      var app = angular.module('app', ['ui.grid', 'ui.grid.moveColumns']);
+      app.controller('MainCtrl', ['$scope', function ($scope) {
+        $scope.data = [
+          { name: 'Bob', title: 'CEO', age: 45 },
+          { name: 'Frank', title: 'Lowly Developer', age: 25 },
+          { name: 'Jenny', title: 'Highly Developer', age: 35 }
+        ];
+        $scope.columnDefs = [
+          {name: 'name'},
+          {name: 'title'},
+          {name: 'age'}
+        ];
+      }]);
+    </file>
+   <file name="main.css">
+   .grid {
+      width: 100%;
+      height: 150px;
+    }
+   </file>
+    <file name="index.html">
+      <div ng-controller="MainCtrl">
+      <div class="grid" ui-grid="{ data: data, columnDefs: columnDefs }" ui-grid-move-columns></div>
+      </div>
+    </file>
+  </example>
+  */
   module.directive('uiGridMoveColumns', ['uiGridMoveColumnService', function (uiGridMoveColumnService) {
     return {
       replace: true,
@@ -85,6 +189,27 @@
     };
   }]);
 
+  /**
+   *  @ngdoc directive
+   *  @name ui.grid.moveColumns.directive:uiGridHeaderCell
+   *  @element div
+   *  @restrict A
+   *
+   *  @description Stacks on top of ui.grid.uiGridHeaderCell to provide capability to be able to move it to reposition column.
+   *
+   *  On receiving mouseDown event headerCell is cloned, now as the mouse moves the cloned header cell also moved in the grid.
+   *  In case the moving cloned header cell reaches the left or right extreme of grid, grid scrolling is triggered (if horizontal scroll exists).
+   *  On mouseUp event column is repositioned at position where mouse is released and coned header cell is removed.
+   *
+   *  Events that invoke cloning of header cell:
+   *    - mousedown
+   *
+   *  Events that invoke movement of cloned header cell:
+   *    - mousemove
+   *
+   *  Events that invoke repositioning of column:
+   *    - mouseup
+   */
   module.directive('uiGridHeaderCell', ['$q', 'gridUtil', 'uiGridMoveColumnService', function ($q, gridUtil, uiGridMoveColumnService) {
     return {
       priority: -10,
@@ -202,6 +327,3 @@
     };
   }]);
 })();
-
-//TODO: functionality to be tested with row headers, column visibility.
-//When moving right most column ...it appears on blank space
