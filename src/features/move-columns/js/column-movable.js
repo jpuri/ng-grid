@@ -124,8 +124,8 @@
                     movingElm.css({'left': newElementLeft + 'px'});
                   }
                   else {
-                    changeValue *= 20;
-                    uiGridCtrl.fireScrollingEvent({ x: { incrementalPixels: changeValue} });
+                    changeValue *= 5;
+                    uiGridCtrl.fireScrollingEvent({ x: { pixels: changeValue * 2.5} });
                   }
                   totalMouseMovement += changeValue;
                   previousMouseX = evt.pageX;
