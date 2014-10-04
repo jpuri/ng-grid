@@ -126,10 +126,11 @@
                   throw new Error("No percentage or pixel value provided for scroll event X axis");
                 }
 
+                var newScrollLeft = Math.max(0, scrollXPercentage * scrollWidth);
+                
                 // uiGridCtrl.adjustScrollHorizontal(newScrollLeft, scrollXPercentage);
 
                 // containerCtrl.viewport[0].scrollLeft = newScrollLeft;
-                var newScrollLeft = Math.max(0, scrollXPercentage * scrollWidth);
                 containerCtrl.viewport[0].scrollLeft = GridUtil.denormalizeScrollLeft(containerCtrl.viewport, newScrollLeft);
 
                 containerCtrl.prevScrollLeft = newScrollLeft;

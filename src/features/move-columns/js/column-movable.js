@@ -44,24 +44,25 @@
       redrawColumnAtPosition: function (grid, originalPosition, newPosition) {
         var visibleColumns = grid.renderContainers['body'].visibleColumnCache;
         var originalColumn = visibleColumns[originalPosition];
-        if (originalPosition > newPosition) {
-          for (var i1 = originalPosition; i1 > newPosition; i1--) {
-            visibleColumns[i1] = visibleColumns[i1 - 1];
+        if (originalColumn.colDef.enableColumnMoving) {
+          if (originalPosition > newPosition) {
+            for (var i1 = originalPosition; i1 > newPosition; i1--) {
+              visibleColumns[i1] = visibleColumns[i1 - 1];
+            }
           }
-        }
-        else if (newPosition > originalPosition) {
-          for (var i2 = originalPosition; i2 < newPosition; i2++) {
-            visibleColumns[i2] = visibleColumns[i2 + 1];
+          else if (newPosition > originalPosition) {
+            for (var i2 = originalPosition; i2 < newPosition; i2++) {
+              visibleColumns[i2] = visibleColumns[i2 + 1];
+            }
           }
+          visibleColumns[newPosition] = originalColumn;
+          $timeout(function () {
+            grid.redrawInPlace();
+            grid.refreshCanvas(true);
+            grid.api.colMovable.raise.columnPositionChanged(originalColumn);
+          });
         }
-        visibleColumns[newPosition] = originalColumn;
-        $timeout(function () {
-          grid.redrawInPlace();
-          grid.refreshCanvas(true);
-          grid.api.colMovable.raise.columnPositionChanged(originalColumn);
-        });
       }
-
     };
     return service;
   }]);
