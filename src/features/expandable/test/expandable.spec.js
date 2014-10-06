@@ -33,12 +33,12 @@ describe('ui.grid.expandable', function () {
   }));
 
   it('public api expandable should be well defined', function () {
-    expect(scope.gridApi.expandable).toBeDefined();
-    expect(scope.gridApi.expandable.on.rowExpandedStateChanged).toBeDefined();
-    expect(scope.gridApi.expandable.raise.rowExpandedStateChanged).toBeDefined();
-    expect(scope.gridApi.expandable.toggleRowExpansion).toBeDefined();
-    expect(scope.gridApi.expandable.expandAllRows).toBeDefined();
-    expect(scope.gridApi.expandable.collapseAllRows).toBeDefined();
+      expect(scope.gridApi.expandable).toBeDefined();
+      expect(scope.gridApi.expandable.on.rowExpandedStateChanged).toBeDefined();
+      expect(scope.gridApi.expandable.raise.rowExpandedStateChanged).toBeDefined();
+      expect(scope.gridApi.expandable.toggleRowExpansion).toBeDefined();
+      expect(scope.gridApi.expandable.expandAllRows).toBeDefined();
+      expect(scope.gridApi.expandable.collapseAllRows).toBeDefined();
   });
 
   it('expandAll and collapseAll should set and unset row.isExpanded', function () {
