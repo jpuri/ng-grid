@@ -143,7 +143,9 @@
 
               var downEvent = gridUtil.isTouchEnabled() ? 'touchstart' : 'mousedown';
               $contentsElm.on(downEvent, function(event) {
-                event.stopPropagation();
+                gridUtil.logDebug('mouse event', event.type);
+
+                //event.stopPropagation();
 
                 if (typeof(event.originalEvent) !== 'undefined' && event.originalEvent !== undefined) {
                   event = event.originalEvent;
