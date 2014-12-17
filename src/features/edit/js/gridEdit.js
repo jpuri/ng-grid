@@ -369,8 +369,8 @@
    *
    */
   module.directive('uiGridCell',
-    ['$compile', '$injector', '$timeout', 'uiGridConstants', 'uiGridEditConstants', 'gridUtil', '$parse', 'uiGridEditService',
-      function ($compile, $injector, $timeout, uiGridConstants, uiGridEditConstants, gridUtil, $parse, uiGridEditService) {
+    ['$compile', '$injector', '$timeout', 'uiGridConstants', 'uiGridEditConstants', 'gridUtil', '$parse', 'uiGridEditService', '$log',
+      function ($compile, $injector, $timeout, uiGridConstants, uiGridEditConstants, gridUtil, $parse, uiGridEditService, $log) {
         var touchstartTimeout = 500;
 
         return {
@@ -587,19 +587,19 @@
 
               var optionFilter = $scope.col.colDef.editDropdownFilter ? '|' + $scope.col.colDef.editDropdownFilter : '';
               html = html.replace(uiGridConstants.CUSTOM_FILTERS, optionFilter);
-
-              $scope.inputType = 'text';
+              var inputType = 'text';
               switch ($scope.col.colDef.type){
                 case 'boolean':
-                  $scope.inputType = 'checkbox';
+                  inputType = 'checkbox';
                   break;
                 case 'number':
-                  $scope.inputType = 'number';
+                  inputType = 'number';
                   break;
                 case 'date':
-                  $scope.inputType = 'date';
+                  inputType = 'date';
                   break;
               }
+              html = html.replace('INPUT_TYPE', inputType);
 
               var editDropdownRowEntityOptionsArrayPath = $scope.col.colDef.editDropdownRowEntityOptionsArrayPath;
               if (editDropdownRowEntityOptionsArrayPath) {
@@ -814,7 +814,7 @@
    *  model is invalid date or value of input is entered wrong.
    *
    */
-    module.directive('input', ['$filter', function ($filter) {
+    module.directive('uiGridEditor', ['$filter', '$log', function ($filter, $log) {
       function parseDateString(dateString) {
         if (typeof(dateString) === 'undefined' || dateString === '') {
           return null;
@@ -833,7 +833,7 @@
         return new Date(year, (month - 1), day);
       }
       return {
-        restrict: 'E',
+        priority: -100, // run after default uiGridEditor directive
         require: '?ngModel',
         link: function (scope, element, attrs, ngModel) {
 

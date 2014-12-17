@@ -221,8 +221,8 @@
    *  Events that invoke repositioning of column:
    *    - mouseup
    */
-  module.directive('uiGridHeaderCell', ['$q', 'gridUtil', 'uiGridMoveColumnService', '$document', '$log',
-    function ($q, gridUtil, uiGridMoveColumnService, $document, $log) {
+  module.directive('uiGridHeaderCell', ['$q', 'gridUtil', 'uiGridMoveColumnService', '$document', '$log', 'uiGridConstants',
+    function ($q, gridUtil, uiGridMoveColumnService, $document, $log, uiGridConstants) {
       return {
         priority: -10,
         require: '^uiGrid',
@@ -232,183 +232,187 @@
 
               if ($scope.col.colDef.enableColumnMoving) {
 
-                var mouseDownHandler = function (evt) {
-                  if (evt.target.className !== 'ui-grid-icon-angle-down' && evt.target.tagName !== 'I' &&
-                    evt.target.className.indexOf('ui-grid-filter-input') < 0) {
+                $scope.$on(uiGridConstants.events.COLUMN_HEADER_CLICK, function (event, args) {
 
-                    //Setting some variables required for calculations.
-                    var gridLeft = $scope.grid.element[0].getBoundingClientRect().left;
-                    var previousMouseX = evt.pageX;
-                    var totalMouseMovement = 0;
-                    var rightMoveLimit = gridLeft + $scope.grid.getViewportWidth() - $scope.grid.verticalScrollbarWidth;
+                  if (args.columnName === $scope.col.colDef.name) {
 
-                    //Clone element should move horizontally with mouse.
-                    var elmCloned = false;
-                    var movingElm;
-                    var reducedWidth;
+                    var evt = args.event;
+                    if (evt.target.className !== 'ui-grid-icon-angle-down' && evt.target.tagName !== 'I' &&
+                      evt.target.className.indexOf('ui-grid-filter-input') < 0) {
 
-                    var cloneElement = function () {
-                      elmCloned = true;
+                      //Setting some variables required for calculations.
+                      var gridLeft = $scope.grid.element[0].getBoundingClientRect().left;
+                      var previousMouseX = evt.pageX;
+                      var totalMouseMovement = 0;
+                      var rightMoveLimit = gridLeft + $scope.grid.getViewportWidth() - $scope.grid.verticalScrollbarWidth;
 
-                      //Cloning header cell and appending to current header cell.
-                      movingElm = $elm.clone();
-                      $elm.parent().append(movingElm);
+                      //Clone element should move horizontally with mouse.
+                      var elmCloned = false;
+                      var movingElm;
+                      var reducedWidth;
 
-                      //Left of cloned element should be aligned to original header cell.
-                      movingElm.addClass('movingColumn');
-                      var movingElementStyles = {};
-                      var elmLeft = $elm[0].getBoundingClientRect().left;
-                      movingElementStyles.left = (elmLeft - gridLeft) + 'px';
-                      var gridRight = $scope.grid.element[0].getBoundingClientRect().right;
-                      var elmRight = $elm[0].getBoundingClientRect().right;
-                      if (elmRight > gridRight) {
-                        reducedWidth = $scope.col.drawnWidth + (gridRight - elmRight);
-                        movingElementStyles.width = reducedWidth + 'px';
-                      }
-                      movingElm.css(movingElementStyles);
-                    };
+                      var cloneElement = function () {
+                        elmCloned = true;
 
-                    var moveElement = function (changeValue) {
-                      //Hide column menu
-                      uiGridCtrl.fireEvent('hide-menu');
+                        //Cloning header cell and appending to current header cell.
+                        movingElm = $elm.clone();
+                        $elm.parent().append(movingElm);
 
-                      //Calculate new position of left of column
-                      var currentElmLeft = movingElm[0].getBoundingClientRect().left - 1;
-                      var currentElmRight = movingElm[0].getBoundingClientRect().right;
-                      var newElementLeft;
-                      if (gridUtil.detectBrowser() === 'ie') {
-                        newElementLeft = currentElmLeft + changeValue;
-                      }
-                      else {
-                        newElementLeft = currentElmLeft - gridLeft + changeValue;
-                      }
-                      newElementLeft = newElementLeft < rightMoveLimit ? newElementLeft : rightMoveLimit;
+                        //Left of cloned element should be aligned to original header cell.
+                        movingElm.addClass('movingColumn');
+                        var movingElementStyles = {};
+                        var elmLeft = $elm[0].getBoundingClientRect().left;
+                        movingElementStyles.left = (elmLeft - gridLeft) + 'px';
+                        var gridRight = $scope.grid.element[0].getBoundingClientRect().right;
+                        var elmRight = $elm[0].getBoundingClientRect().right;
+                        if (elmRight > gridRight) {
+                          reducedWidth = $scope.col.drawnWidth + (gridRight - elmRight);
+                          movingElementStyles.width = reducedWidth + 'px';
+                        }
+                        movingElm.css(movingElementStyles);
+                      };
 
-                      //Update css of moving column to adjust to new left value or fire scroll in case column has reached edge of grid
-                      if ((currentElmLeft >= gridLeft || changeValue > 0) && (currentElmRight <= rightMoveLimit || changeValue < 0)) {
-                        movingElm.css({visibility: 'visible', 'left': newElementLeft + 'px'});
-                      }
-                      else {
-                        changeValue *= 8;
-                        uiGridCtrl.fireScrollingEvent({x: {pixels: changeValue}});
-                      }
-                      totalMouseMovement += changeValue;
+                      var moveElement = function (changeValue) {
+                        //Hide column menu
+                        uiGridCtrl.fireEvent('hide-menu');
 
-                      //Increase width of moving column, in case the rightmost column was moved and its width was
-                      //decreased because of overflow
-                      if (reducedWidth < $scope.col.drawnWidth) {
-                        reducedWidth += Math.abs(changeValue);
-                        movingElm.css({'width': reducedWidth + 'px'});
-                      }
-                    };
-
-                    var mouseMoveHandler = function (evt) {
-                      var changeValue = evt.pageX - previousMouseX;
-                      if (!elmCloned && Math.abs(changeValue) > 50) {
-                        cloneElement();
-                      }
-                      else if (elmCloned) {
-                        moveElement(changeValue);
-                        previousMouseX = evt.pageX;
-                      }
-                    };
-
-                    /*
-                     //Commenting these lines as they are creating trouble with column moving when grid has huge scroll
-                     // On scope destroy, remove the mouse event handlers from the document body
-                     $scope.$on('$destroy', function () {
-                     $document.off('mousemove', mouseMoveHandler);
-                     $document.off('mouseup', mouseUpHandler);
-                     });
-                     */
-                    $document.on('mousemove', mouseMoveHandler);
-
-                    var mouseUpHandler = function (evt) {
-
-                      //Remove the cloned element on mouse up.
-                      if (movingElm) {
-                        movingElm.remove();
-                      }
-
-                      var columns = $scope.grid.columns;
-                      var columnIndex = 0;
-                      for (var i = 0; i < columns.length; i++) {
-                        if (columns[i].colDef.name !== $scope.col.colDef.name) {
-                          columnIndex++;
+                        //Calculate new position of left of column
+                        var currentElmLeft = movingElm[0].getBoundingClientRect().left - 1;
+                        var currentElmRight = movingElm[0].getBoundingClientRect().right;
+                        var newElementLeft;
+                        if (gridUtil.detectBrowser() === 'ie') {
+                          newElementLeft = currentElmLeft + changeValue;
                         }
                         else {
-                          break;
+                          newElementLeft = currentElmLeft - gridLeft + changeValue;
                         }
-                      }
+                        newElementLeft = newElementLeft < rightMoveLimit ? newElementLeft : rightMoveLimit;
 
-                      //Case where column should be moved to a position on its left
-                      if (totalMouseMovement < 0) {
-                        var totalColumnsLeftWidth = 0;
-                        for (var il = columnIndex - 1; il >= 0; il--) {
-                          if (angular.isUndefined(columns[il].colDef.visible) || columns[il].colDef.visible === true) {
-                            totalColumnsLeftWidth += columns[il].drawnWidth || columns[il].width || columns[il].colDef.width;
-                            if (totalColumnsLeftWidth > Math.abs(totalMouseMovement)) {
-                              uiGridMoveColumnService.redrawColumnAtPosition
-                              ($scope.grid, columnIndex, il + 1);
-                              break;
-                            }
+                        //Update css of moving column to adjust to new left value or fire scroll in case column has reached edge of grid
+                        if ((currentElmLeft >= gridLeft || changeValue > 0) && (currentElmRight <= rightMoveLimit || changeValue < 0)) {
+                          movingElm.css({visibility: 'visible', 'left': newElementLeft + 'px'});
+                        }
+                        else {
+                          changeValue *= 8;
+                          uiGridCtrl.fireScrollingEvent({x: {pixels: changeValue}});
+                        }
+                        totalMouseMovement += changeValue;
+
+                        //Increase width of moving column, in case the rightmost column was moved and its width was
+                        //decreased because of overflow
+                        if (reducedWidth < $scope.col.drawnWidth) {
+                          reducedWidth += Math.abs(changeValue);
+                          movingElm.css({'width': reducedWidth + 'px'});
+                        }
+                      };
+
+                      var mouseMoveHandler = function (evt) {
+                        var changeValue = evt.pageX - previousMouseX;
+                        if (!elmCloned && Math.abs(changeValue) > 50) {
+                          cloneElement();
+                        }
+                        else if (elmCloned) {
+                          moveElement(changeValue);
+                          previousMouseX = evt.pageX;
+                        }
+                      };
+
+                      /*
+                       //Commenting these lines as they are creating trouble with column moving when grid has huge scroll
+                       // On scope destroy, remove the mouse event handlers from the document body
+                       $scope.$on('$destroy', function () {
+                       $document.off('mousemove', mouseMoveHandler);
+                       $document.off('mouseup', mouseUpHandler);
+                       });
+                       */
+                      $document.on('mousemove', mouseMoveHandler);
+
+                      var mouseUpHandler = function (evt) {
+
+                        //Remove the cloned element on mouse up.
+                        if (movingElm) {
+                          movingElm.remove();
+                        }
+
+                        var columns = $scope.grid.columns;
+                        var columnIndex = 0;
+                        for (var i = 0; i < columns.length; i++) {
+                          if (columns[i].colDef.name !== $scope.col.colDef.name) {
+                            columnIndex++;
+                          }
+                          else {
+                            break;
                           }
                         }
-                        //Case where column should be moved to beginning of the grid.
-                        if (totalColumnsLeftWidth < Math.abs(totalMouseMovement)) {
-                          uiGridMoveColumnService.redrawColumnAtPosition
-                          ($scope.grid, columnIndex, 0);
-                        }
-                      }
 
-                      //Case where column should be moved to a position on its right
-                      else if (totalMouseMovement > 0) {
-                        var totalColumnsRightWidth = 0;
-                        for (var ir = columnIndex + 1; ir < columns.length; ir++) {
-                          if (angular.isUndefined(columns[ir].colDef.visible) || columns[ir].colDef.visible === true) {
-                            totalColumnsRightWidth += columns[ir].drawnWidth || columns[ir].width || columns[ir].colDef.width;
-                            if (totalColumnsRightWidth > totalMouseMovement) {
-                              uiGridMoveColumnService.redrawColumnAtPosition
-                              ($scope.grid, columnIndex, ir - 1);
-                              break;
-                            }
-                          }
-                        }
-                        //Case where column should be moved to end of the grid.
-                        if (totalColumnsRightWidth < totalMouseMovement) {
-                          uiGridMoveColumnService.redrawColumnAtPosition
-                          ($scope.grid, columnIndex, columns.length - 1);
-                        }
-                      }
-
-                      else if (totalMouseMovement === 0) {
-                        if (uiGridCtrl.grid.options.enableSorting && $scope.col.enableSorting) {
-                          //sort the current column
-                          var add = false;
-                          if (evt.shiftKey) {
-                            add = true;
-                          }
-
-                          // Sort this column then rebuild the grid's rows
-                          uiGridCtrl.grid.sortColumn($scope.col, add)
-                            .then(function () {
-                              if (uiGridCtrl.columnMenuScope) {
-                                uiGridCtrl.columnMenuScope.hideMenu();
+                        //Case where column should be moved to a position on its left
+                        if (totalMouseMovement < 0) {
+                          var totalColumnsLeftWidth = 0;
+                          for (var il = columnIndex - 1; il >= 0; il--) {
+                            if (angular.isUndefined(columns[il].colDef.visible) || columns[il].colDef.visible === true) {
+                              totalColumnsLeftWidth += columns[il].drawnWidth || columns[il].width || columns[il].colDef.width;
+                              if (totalColumnsLeftWidth > Math.abs(totalMouseMovement)) {
+                                uiGridMoveColumnService.redrawColumnAtPosition
+                                ($scope.grid, columnIndex, il + 1);
+                                break;
                               }
-                              uiGridCtrl.grid.refresh();
-                            });
+                            }
+                          }
+                          //Case where column should be moved to beginning of the grid.
+                          if (totalColumnsLeftWidth < Math.abs(totalMouseMovement)) {
+                            uiGridMoveColumnService.redrawColumnAtPosition
+                            ($scope.grid, columnIndex, 0);
+                          }
                         }
-                      }
 
-                      $document.off('mousemove', mouseMoveHandler);
-                      $document.off('mouseup', mouseUpHandler);
-                    };
+                        //Case where column should be moved to a position on its right
+                        else if (totalMouseMovement > 0) {
+                          var totalColumnsRightWidth = 0;
+                          for (var ir = columnIndex + 1; ir < columns.length; ir++) {
+                            if (angular.isUndefined(columns[ir].colDef.visible) || columns[ir].colDef.visible === true) {
+                              totalColumnsRightWidth += columns[ir].drawnWidth || columns[ir].width || columns[ir].colDef.width;
+                              if (totalColumnsRightWidth > totalMouseMovement) {
+                                uiGridMoveColumnService.redrawColumnAtPosition
+                                ($scope.grid, columnIndex, ir - 1);
+                                break;
+                              }
+                            }
+                          }
+                          //Case where column should be moved to end of the grid.
+                          if (totalColumnsRightWidth < totalMouseMovement) {
+                            uiGridMoveColumnService.redrawColumnAtPosition
+                            ($scope.grid, columnIndex, columns.length - 1);
+                          }
+                        }
 
-                    //Binding the mouseup event handler
-                    $document.on('mouseup', mouseUpHandler);
+                        else if (totalMouseMovement === 0) {
+                          if (uiGridCtrl.grid.options.enableSorting && $scope.col.enableSorting) {
+                            //sort the current column
+                            var add = false;
+                            if (evt.shiftKey) {
+                              add = true;
+                            }
+
+                            // Sort this column then rebuild the grid's rows
+                            uiGridCtrl.grid.sortColumn($scope.col, add)
+                              .then(function () {
+                                if (uiGridCtrl.columnMenuScope) {
+                                  uiGridCtrl.columnMenuScope.hideMenu();
+                                }
+                                uiGridCtrl.grid.refresh();
+                              });
+                          }
+                        }
+
+                        $document.off('mousemove', mouseMoveHandler);
+                        $document.off('mouseup', mouseUpHandler);
+                      };
+
+                      //Binding the mouseup event handler
+                      $document.on('mouseup', mouseUpHandler);
+                    }
                   }
-                };
-                $elm.on('mousedown', mouseDownHandler);
+                });
               }
             }
           };
