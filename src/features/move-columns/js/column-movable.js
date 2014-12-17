@@ -65,7 +65,17 @@
              */
             colMovable: {
               moveColumn: function (originalPosition, finalPosition) {
-                self.redrawColumnAtPosition(grid, originalPosition, finalPosition);
+                var columns = grid.columns;
+                var findPositionForRenderIndex = function (index) {
+                  var position = index;
+                  for (var i = 0; i <= position; i++) {
+                    if (angular.isDefined(columns[i]) && ((angular.isDefined(columns[i].colDef.visible) && columns[i].colDef.visible === false) || columns[i].isRowHeader === true)) {
+                      position++;
+                    }
+                  }
+                  return position;
+                };
+                self.redrawColumnAtPosition(grid, findPositionForRenderIndex(originalPosition), findPositionForRenderIndex(finalPosition));
               }
             }
           }
